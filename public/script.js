@@ -27,6 +27,7 @@ navigator.mediaDevices.getUserMedia({
 
 function addVideoStream(video, stream) {
     video.srcObject = stream
+    video.muted = true
     video.addEventListener('loadedmetadata', () => {
         video.play()
         videoGrid.append(video)
@@ -39,6 +40,7 @@ function openConnection() {
     if (window.confirm("Are you host?")) {
         chatGrid.appendChild(document.createTextNode('Opening connection!\n'))
         lc = new RTCPeerConnection(servers)
+        window.onclose = e => {lc.close()} 
         
         dc = lc.createDataChannel("chat")
         dc.onmessage = e => chatGrid.append('Message: ' + e.data + '\n')
@@ -59,6 +61,7 @@ function openConnection() {
         inviteButton.onclick = () => lc.setRemoteDescription(remoteDescription)            
     } else {
         rc = new RTCPeerConnection(servers)
+        window.onclose = e => {rc.close()} 
         rc.ondatachannel = e => {
             dc = e.channel
             dc.onmessage = e => chatGrid.append('Message: ' + e.data + '\n')
@@ -79,4 +82,3 @@ function openConnection() {
         }
     }  
 }
-
