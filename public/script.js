@@ -17,7 +17,7 @@ const offerOptions = {
   };
 let answer;  
 
-const serverUrl = "http://34.159.97.110:8080";  
+const serverUrl = "https://speakingspace.online";  
 
 navigator.mediaDevices.getUserMedia({
     audio: true,
