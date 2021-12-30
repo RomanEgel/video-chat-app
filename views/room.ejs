@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>videoChatApp</title>
     <link rel="stylesheet" href="style.css" />
-    <!-- <script src="/socket.io/socket.io.js"></script> -->
     <script src="https://kit.fontawesome.com/c939d0e917.js"></script>
-    <!-- <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script> -->
     <script>
-      const ROOM_ID = "room";
+      var ROOM_ID = '<%= room %>'
     </script>
   </head>
   <body>
@@ -59,5 +57,8 @@
   </div>
   </body>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script src="script.js"></script>
 </html>

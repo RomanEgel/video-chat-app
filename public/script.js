@@ -4,16 +4,20 @@ const myVideo = document.createElement('video')
 const remoteVideo = document.createElement('video')
 const chatGrid = document.getElementById('chat-box')
 const inviteButton = document.getElementById('invite-button')
+const stopVideoButton = document.getElementById('stopVideo')
 let lc;
 let dc;
 let rc;
-let remoteDescription;
+let isHost = window.confirm("Are you host?");
+const userId = isHost ? "host" : "client";
 myVideo.muted = true;
 const offerOptions = {
     offerToReceiveAudio: 1,
     offerToReceiveVideo: 1
   };
+let answer;  
 
+const serverUrl = "http://34.159.97.110:8080";  
 
 navigator.mediaDevices.getUserMedia({
     audio: true,
@@ -27,20 +31,35 @@ navigator.mediaDevices.getUserMedia({
 
 function addVideoStream(video, stream) {
     video.srcObject = stream
-    video.muted = true
     video.addEventListener('loadedmetadata', () => {
         video.play()
         videoGrid.append(video)
     })
 }
 
+
+stopVideoButton.onclick = e => {
+    if (isHost) {
+        lc.close()
+        axios({
+            method: 'post',
+            url: serverUrl + "/close-room",
+            data: {
+                "roomId": ROOM_ID,
+                "userId": userId
+            }
+        })
+    } else {
+        rc.close()
+    }
+}
+
 function openConnection() {
     const servers = null;
 
-    if (window.confirm("Are you host?")) {
+    if (isHost) {
         chatGrid.appendChild(document.createTextNode('Opening connection!\n'))
         lc = new RTCPeerConnection(servers)
-        window.onclose = e => {lc.close()} 
         
         dc = lc.createDataChannel("chat")
         dc.onmessage = e => chatGrid.append('Message: ' + e.data + '\n')
@@ -57,11 +76,10 @@ function openConnection() {
     
         lc.createOffer(offerOptions)
             .then(o => lc.setLocalDescription(o))
-            .then(a => chatGrid.appendChild(document.createTextNode('Local description updated!\n')))  
-        inviteButton.onclick = () => lc.setRemoteDescription(remoteDescription)            
+            .then(a => chatGrid.appendChild(document.createTextNode('Local description updated!\n')))
+            .then(() => connectToServer())
     } else {
         rc = new RTCPeerConnection(servers)
-        window.onclose = e => {rc.close()} 
         rc.ondatachannel = e => {
             dc = e.channel
             dc.onmessage = e => chatGrid.append('Message: ' + e.data + '\n')
@@ -75,10 +93,55 @@ function openConnection() {
                 console.log('received remote stream');
             }
         }
-        inviteButton.onclick = () => {
-            rc.setRemoteDescription(remoteDescription).then(e => console.log('Description set'))
-            rc.createAnswer()
-                .then(a => rc.setLocalDescription(a))
-        }
+        inviteButton.onclick = connectToServer
     }  
+}
+
+function connectToServer() {
+    if (isHost) {
+        axios({
+            method: 'post',
+            url: serverUrl + "/create-room",
+            data: {
+                "roomId": ROOM_ID,
+                "userId": userId,
+                "offer": JSON.stringify(lc.localDescription)
+            }
+        })
+        .then(response => console.log("SUCCESS !"))
+        .then(() => listenToServer())
+    } else {
+        axios({
+            method: 'post',
+            url: serverUrl + "/join-room",
+            data: {
+                "roomId": ROOM_ID,
+                "userId": userId,
+            }
+        })
+        .then(response => {console.log("OFFER:"); console.log(response.data); rc.setRemoteDescription(response.data);})
+        .then(e => console.log('Description set'))
+        .then(e => rc.createAnswer())
+        .then(a => rc.setLocalDescription(a))
+        .then(() => listenToServer())
+    }
+}
+
+function listenToServer() {
+    var ws = new SockJS(serverUrl + "/chat/connect");
+    var client = Stomp.over(ws);
+    client.connect({}, function (frame) {
+        if (isHost) {
+            client.subscribe('/topic/room-' + ROOM_ID, function (message) {
+                const chatEvent = JSON.parse(message.body)
+                answer = JSON.parse(chatEvent.answer)
+                console.log("ANSWER:")
+                console.log(answer)
+                lc.setRemoteDescription(answer)
+                    .then(e => console.log("Connection set!"))
+            });
+        } else {
+            client.send("/chat/connect", {}, JSON.stringify({"roomId": ROOM_ID, "userId": userId, "answer": JSON.stringify(rc.localDescription)}));
+        }
+      });
 }
