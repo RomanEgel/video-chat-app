@@ -55,7 +55,11 @@ stopVideoButton.onclick = e => {
 }
 
 function openConnection() {
-    const servers = null;
+    const servers = {
+        iceServers: [
+            {urls: 'stun:stun.l.google.com:19302?transport=udp'}
+        ]
+    };
 
     if (isHost) {
         chatGrid.appendChild(document.createTextNode('Opening connection!\n'))
