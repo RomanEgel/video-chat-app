@@ -57,7 +57,8 @@ stopVideoButton.onclick = e => {
 function openConnection() {
     const servers = {
         iceServers: [
-            {urls: 'stun:stun.l.google.com:19302?transport=udp'}
+            {urls: 'stun:stun.l.google.com:19302?transport=udp'},
+            {urls: 'turn:34.159.76.223:3478', username: "webrtc", credential: "turnpassword"}
         ]
     };
 
