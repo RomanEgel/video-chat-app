@@ -32,6 +32,8 @@ navigator.mediaDevices.getUserMedia({
 function addVideoStream(video, stream) {
     video.srcObject = stream
     video.addEventListener('loadedmetadata', () => {
+        video.muted = true
+        video.setAttribute('webkit-playsinline', 'webkit-playsinline');
         video.play()
         videoGrid.append(video)
     })
