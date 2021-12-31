@@ -33,9 +33,13 @@ function addVideoStream(video, stream) {
     video.srcObject = stream
     video.addEventListener('loadedmetadata', () => {
         video.muted = true
+        video.autoplay = true
+        video.playsinline = true
         video.setAttribute('webkit-playsinline', 'webkit-playsinline');
-        video.play()
+        video.setAttribute('muted', true);
+        video.setAttribute('playsinline', true);
         videoGrid.append(video)
+        video.play()
     })
 }
 
