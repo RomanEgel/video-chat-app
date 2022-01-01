@@ -71,7 +71,9 @@ function openConnection() {
     if (isHost) {
         chatGrid.appendChild(document.createTextNode('Opening connection!\n'))
         lc = new RTCPeerConnection(servers)
-        
+        lc.onicecandidateerror = e => {console.log("Candidate error"); console.log(e)}
+        lc.onnegotiationneeded = e => {console.log("Negotiation needed"); console.log(e)}
+        lc.onsignalingstatechange = e => {console.log("Signaling state changed"); console.log(e)}
         dc = lc.createDataChannel("chat")
         dc.onmessage = e => chatGrid.append('Message: ' + e.data + '\n')
         dc.onopen = e => chatGrid.appendChild(document.createTextNode('User connected!\n'))
@@ -91,6 +93,9 @@ function openConnection() {
             .then(() => connectToServer())
     } else {
         rc = new RTCPeerConnection(servers)
+        rc.onicecandidateerror = e => {console.log("Candidate error"); console.log(e)}
+        rc.onnegotiationneeded = e => {console.log("Negotiation needed"); console.log(e)}
+        rc.onsignalingstatechange = e => {console.log("Signaling state changed"); console.log(e)}
         rc.ondatachannel = e => {
             dc = e.channel
             dc.onmessage = e => chatGrid.append('Message: ' + e.data + '\n')
