@@ -64,7 +64,7 @@ function openConnection() {
     const servers = {
         iceServers: [
             {urls: 'stun:stun.l.google.com:19302?transport=udp'},
-            {urls: 'turn:34.159.76.223:3478', username: "webrtc", credential: "turnpassword"}
+            {urls: 'turn:numb.viagenie.ca', username: "webrtc@live.com", credential: "muazkh"}
         ]
     };
 
