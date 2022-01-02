@@ -33,16 +33,31 @@ navigator.mediaDevices.getUserMedia({
 function addVideoStream(video, stream) {
     video.srcObject = stream
     video.addEventListener('loadedmetadata', () => {
-        video.muted = true
-        video.autoplay = true
-        video.playsinline = true
-        video.setAttribute('webkit-playsinline', 'webkit-playsinline');
-        video.setAttribute('muted', true);
-        video.setAttribute('playsinline', true);
+        if (iOS()) {
+            video.muted = true
+            video.autoplay = true
+            video.playsinline = true
+            video.setAttribute('webkit-playsinline', 'webkit-playsinline');
+            video.setAttribute('muted', true);
+            video.setAttribute('playsinline', true);
+        }
         videoGrid.append(video)
         video.play()
     })
 }
+
+function iOS() {
+    return [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+    // iPad on iOS 13 detection
+    || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+  }
 
 inviteButton.onclick = connectToServer
 muteButton.onclick = e => {
