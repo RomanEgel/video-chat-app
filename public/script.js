@@ -43,7 +43,7 @@ function addVideoStream(video, stream) {
     })
 }
 
-
+inviteButton.onclick = connectToServer
 stopVideoButton.onclick = e => {
     if (isHost) {
         lc.close()
@@ -89,8 +89,7 @@ function openConnection() {
     
         lc.createOffer(offerOptions)
             .then(o => lc.setLocalDescription(o))
-            .then(a => chatGrid.appendChild(document.createTextNode('Local description updated!\n')))
-            .then(() => connectToServer())
+            .then(a => chatGrid.appendChild(document.createTextNode('Local description updated!\n')))            
     } else {
         rc = new RTCPeerConnection(servers)
         rc.onicecandidateerror = e => {console.log("Candidate error"); console.log(e)}
@@ -109,7 +108,6 @@ function openConnection() {
                 console.log('received remote stream');
             }
         }
-        inviteButton.onclick = connectToServer
     }  
 }
 
