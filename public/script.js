@@ -5,6 +5,7 @@ const remoteVideo = document.createElement('video')
 const chatGrid = document.getElementById('chat-box')
 const inviteButton = document.getElementById('invite-button')
 const stopVideoButton = document.getElementById('stopVideo')
+const muteButton = document.getElementById('muteButton')
 let lc;
 let dc;
 let rc;
@@ -15,7 +16,7 @@ const offerOptions = {
     offerToReceiveAudio: 1,
     offerToReceiveVideo: 1
   };
-let answer;  
+let answer;
 
 const serverUrl = "https://speakingspace.online";  
 
@@ -44,6 +45,9 @@ function addVideoStream(video, stream) {
 }
 
 inviteButton.onclick = connectToServer
+muteButton.onclick = e => {
+    myVideoStream.getAudioTracks()[0].enabled ^= true
+}
 stopVideoButton.onclick = e => {
     if (isHost) {
         lc.close()
