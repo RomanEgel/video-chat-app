@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Speaking space</title>
+		<link rel="stylesheet" href="style.css" />
+		<script src="https://kit.fontawesome.com/c939d0e917.js"></script>
+		<script>
+			var ROOM_TO_JOIN = '<%= room %>'
+		</script>
+	</head>
+	<body>
+		<div class="header">
+			<div class="logo">
+			  <h3>Video Chat</h2>
+			</div>
+		</div>  
+		<div class="main">
+			<div class="main__middle">
+				<form style="padding-right: 10px;">
+					<label for="fname">User name:</label><br>
+					<input type="text" id="fname" name="fname" style="height: 20px;" required><br>
+					<button type="button" id="createButton" onclick="createRoomRedirect()" class="lobby__button" style="width: 150px;">Create a room</button>
+				</form>
+				<form>
+					<label for="froom">Room link:</label><br>
+					<input type="text" id="froom" name="froom" style="height: 20px;" required><br>
+					<button type="button" id="joinButton" onclick="joinRoom()" class="lobby__button" style="width: 150px;">Join the room</button>
+				</form>
+			</div>
+		</div>  
+	</body>
+	<script>
+		if (ROOM_TO_JOIN) {
+			froom.value = ROOM_TO_JOIN
+		}
+
+		function createRoomRedirect() {
+			if (!fname.value) {
+				window.alert("Fill username field");
+				return
+			}
+			location.href = "/create-room?name=" + fname.value
+		}
+
+		function joinRoom() {
+			if (!fname.value || !froom.value) {
+				window.alert("Fill username and link field");
+				return
+			}
+
+			// check room exists
+			location.href = "/join-room/" + froom.value + "?name=" + fname.value
+		}
+	</script>
+</html>

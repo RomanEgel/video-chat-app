@@ -12,6 +12,7 @@
     "axios": "^0.24.0",
     "ejs": "^3.1.6",
     "express": "^4.17.2",
+    "express-session": "^1.17.2",
     "nodemon": "^2.0.15",
     "requirejs": "^2.3.6",
     "sockjs-client": "^1.5.2",

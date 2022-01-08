@@ -39,6 +39,23 @@
   flex-direction: column;
 }
 
+.main__middle {
+  display: flex;
+  margin: auto;
+  justify-content: center;
+}
+
+.lobby__button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--primary-color);
+  height: 50px;
+  border-radius: 5px;
+  color: var(--main-light);
+  width: 150px;
+}
+
 .videos__group {
   flex-grow: 1;
   display: flex;

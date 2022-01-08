@@ -4,10 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>videoChatApp</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/style.css" />
     <script src="https://kit.fontawesome.com/c939d0e917.js"></script>
     <script>
       var ROOM_ID = '<%= room %>'
+      var USER_NAME = '<%= username %>'
+      var USER_ACTION = '<%= action %>'
     </script>
   </head>
   <body>
@@ -60,5 +62,5 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script src="script.js"></script>
+  <script src="/script.js"></script>
 </html>
