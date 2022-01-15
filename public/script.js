@@ -9,6 +9,7 @@ const muteButton = document.getElementById('muteButton')
 let isHost = USER_ACTION == "CREATE"
 var streamingConnections = []
 var dataConnections = []
+var signalingFinished = []
 myVideo.muted = true;
 const offerOptions = {
     offerToReceiveAudio: 1,
@@ -21,9 +22,10 @@ const servers = {
     ]
 }; 
 let answer;
+let iceCandidatesToSend = []
 
 const WEB_SERVER = "https://speakingspace.online"
-const BACKEND_SERVER_WS = "wss://speakingspace.online";  
+const BACKEND_SERVER_WS = "ws://localhost:8080";  
 
 var ws = new WebSocket(BACKEND_SERVER_WS + "/video-chat");
 var client = Stomp.over(ws);
@@ -46,9 +48,12 @@ client.connect({}, function (sessionId) {
             case "USER_ANSWER":
                 handleUserAnswer(userEvent);
                 break;
+            case "SIGNALING_FINISH":
+                handleSignalingFinished(userEvent);
+                break;    
             case "CONNECTION_UPDATE":
                 handleConnectionUpdate(userEvent);
-                break;    
+                break;     
             case "USER_QUIT":
                 break;                
         }
@@ -101,6 +106,13 @@ function buildConnectionUpdateEvent(target, ice) {
     }
 }
 
+function buildSignalingFinishedEvent(target) {
+    return {
+        "eventType" : "SIGNALING_FINISH",
+        "target": target,
+        "payload": null
+    }
+}
 
 function handleRoomCreation(userEvent) {
     if (!isHost || ROOM_ID != userEvent.source) {
@@ -126,7 +138,8 @@ function handleUserOffer(userEvent) {
 }
 
 function handleUserAnswer(userEvent) {
-    var con = streamingConnections[userEvent.source]
+    var target = userEvent.source
+    var con = streamingConnections[target]
     if (!con) {
         console.log("TARGET IS NOT FOUND. ABORTING")
         return;
@@ -134,6 +147,25 @@ function handleUserAnswer(userEvent) {
 
     con.setRemoteDescription(JSON.parse(userEvent.payload))
         .then(e => console.log("Remote description set!"))
+        .then(e => {
+            signalingFinished[target] = true
+            console.log("Signaling finished with " + target)
+            sendSignalingFinishedEvent(target);
+            sendExistingIceCandidates(target);
+        })
+}
+
+function handleSignalingFinished(userEvent) {
+    var target = userEvent.source;
+    var con = streamingConnections[target]
+    if (!con) {
+        console.log("TARGET IS NOT FOUND. ABORTING")
+        return;
+    }
+
+    signalingFinished[target] = true;
+    console.log("Signaling finished with " + target)
+    sendExistingIceCandidates(target);
 }
 
 function handleConnectionUpdate(userEvent) {
@@ -161,7 +193,30 @@ function sendConnectionUpdate(target, ice) {
         console.log("All ice candidates have been sent!")
     }
 
-    client.send("/chat/server-events", {}, JSON.stringify(buildConnectionUpdateEvent(target, ice)))
+    var con = streamingConnections[target]
+
+    if (!signalingFinished[target]) {
+        if (!iceCandidatesToSend[target]) {
+            iceCandidatesToSend[target] = []
+        }
+        iceCandidatesToSend[target].push(ice);
+    } else {
+        client.send("/chat/server-events", {}, JSON.stringify(buildConnectionUpdateEvent(target, ice)))
+    }
+}
+
+function sendSignalingFinishedEvent(target) {
+    client.send("/chat/server-events", {}, JSON.stringify(buildSignalingFinishedEvent(target)))
+}
+
+function sendExistingIceCandidates(target) {
+    if (iceCandidatesToSend[target]) {
+        for (const ice of iceCandidatesToSend[target]) {
+            if (ice) {
+                sendConnectionUpdate(target, ice);
+            }
+        }
+    }
 }
 
 function createOffer(target) {
