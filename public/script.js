@@ -25,7 +25,7 @@ let answer;
 let iceCandidatesToSend = []
 
 const WEB_SERVER = "https://speakingspace.online"
-const BACKEND_SERVER_WS = "ws://localhost:8080";  
+const BACKEND_SERVER_WS = "wss://speakingspace.online";  
 
 var ws = new WebSocket(BACKEND_SERVER_WS + "/video-chat");
 var client = Stomp.over(ws);
