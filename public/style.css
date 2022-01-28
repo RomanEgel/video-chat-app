@@ -90,6 +90,11 @@ video {
   margin-left: auto;
 }
 
+.optionts__right_up {
+  margin-left: auto;
+  margin-top: 0;
+}
+
 .options__button {
   display: flex;
   justify-content: center;

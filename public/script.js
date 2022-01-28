@@ -6,11 +6,12 @@ const chatGrid = document.getElementById('chat-box')
 const inviteButton = document.getElementById('invite-button')
 const stopVideoButton = document.getElementById('stopVideo')
 const muteButton = document.getElementById('muteButton')
-let isHost = USER_ACTION == "CREATE"
+const closeButton = document.getElementById('close-button')
 var streamingConnections = []
 var dataConnections = []
 var signalingFinished = []
 myVideo.muted = true;
+myVideo.enabled = false
 const offerOptions = {
     offerToReceiveAudio: 1,
     offerToReceiveVideo: 1
@@ -21,27 +22,46 @@ const servers = {
         {urls: 'turn:34.159.76.223:3478', username: "tuta", credential: "tuta"}
     ]
 }; 
+let accessToken = window.getCookie("access_token_" + USER_ID)
 let answer;
 let iceCandidatesToSend = []
 
 const WEB_SERVER = "https://speakingspace.online"
 const BACKEND_SERVER_WS = "wss://speakingspace.online";  
 
-var ws = new WebSocket(BACKEND_SERVER_WS + "/video-chat");
+var ws = new WebSocket(BACKEND_SERVER_WS + "/video-chat?access_token=" + accessToken);
 var client = Stomp.over(ws);
 
-client.connect({}, function (sessionId) {
-    client.subscribe('/user/queue/client-events', function (message) {
-        console.log("GOT MESSAGE!!!!")
+var sessionId;
+
+if (!ROOM_ID) {
+    alert("ROOM IS NOT SPECIFIED")
+} else {
+    client.connect({}, function () {
+        startInteraction()
+    });   
+}
+
+function startInteraction() {
+    client.subscribe('/topic/client-events/' + ROOM_ID, function (message) {
+        console.log("GOT BROADCAST MESSAGE!!!!")
         const userEvent = JSON.parse(message.body)
         console.log(userEvent)
         switch (userEvent.eventType) {
-            case "ROOM_CREATE":
-                handleRoomCreation(userEvent)
-                break;
             case "USER_JOIN":
                 handleUserJoin(userEvent)
                 break;
+            case "USER_QUIT":
+                handleUserQuit(userEvent)
+                break;                
+        }
+    })
+
+    client.subscribe('/user/queue/client-events/' + ROOM_ID, function (message) {
+        console.log("GOT QUEUE MESSAGE!!!!")
+        const userEvent = JSON.parse(message.body)
+        console.log(userEvent)
+        switch (userEvent.eventType) {
             case "USER_OFFER":
                 handleUserOffer(userEvent);
                 break;
@@ -53,39 +73,26 @@ client.connect({}, function (sessionId) {
                 break;    
             case "CONNECTION_UPDATE":
                 handleConnectionUpdate(userEvent);
-                break;     
-            case "USER_QUIT":
-                break;                
+                break;                  
         }
-    }) 
+    })  
 
-    if (isHost) {
-        client.send('/chat/server-events', {}, JSON.stringify(buildCreateEvent()))
-    } else {
-        client.send('/chat/server-events', {}, JSON.stringify(buildJoinEvent()))
-    }
-});   
-
-function buildCreateEvent() {
-    return {
-        "eventType" : "ROOM_CREATE",
-        "target": ROOM_ID,
-        "payload": USER_NAME
-    }
+    startVideo()
+        .then(() => client.send('/chat/server-events', {}, JSON.stringify(buildJoinEvent())))
 }
 
 function buildJoinEvent() {
     return {
         "eventType": "USER_JOIN",
-        "target": ROOM_ID,
-        "payload": USER_NAME
+        "roomId": ROOM_ID
     }
 }
 
 function buildOfferEvent(target, offer) {
     return {
         "eventType" : "USER_OFFER",
-        "target": target,
+        "roomId": ROOM_ID,
+        "targetUser": target,
         "payload": JSON.stringify(offer)
     }
 }
@@ -93,7 +100,8 @@ function buildOfferEvent(target, offer) {
 function buildAnswerEvent(target, answer) {
     return {
         "eventType" : "USER_ANSWER",
-        "target": target,
+        "roomId": ROOM_ID,
+        "targetUser": target,
         "payload": JSON.stringify(answer)
     }
 }
@@ -101,7 +109,8 @@ function buildAnswerEvent(target, answer) {
 function buildConnectionUpdateEvent(target, ice) {
     return {
         "eventType" : "CONNECTION_UPDATE",
-        "target": target,
+        "roomId": ROOM_ID,
+        "targetUser": target,
         "payload": JSON.stringify(ice)
     }
 }
@@ -109,36 +118,49 @@ function buildConnectionUpdateEvent(target, ice) {
 function buildSignalingFinishedEvent(target) {
     return {
         "eventType" : "SIGNALING_FINISH",
-        "target": target,
+        "roomId": ROOM_ID,
+        "targetUser": target,
         "payload": null
     }
 }
 
-function handleRoomCreation(userEvent) {
-    if (!isHost || ROOM_ID != userEvent.source) {
-        console.log("Got message that not supposed to receive")
-        return;
+function buildQuitEvent() {
+    return {
+        "eventType" : "USER_QUIT",
+        "roomId": ROOM_ID,
+        "targetUser": null,
+        "payload": null
     }
-
-    startVideo();
 }
 
 function handleUserJoin(userEvent) {
-    if (ROOM_ID != userEvent.source) {
+    if (ROOM_ID != userEvent.roomId || userEvent.sourceUser == USER_ID) {
         console.log("Got message that not supposed to receive")
         return;
     }
 
-    sendOffer(userEvent.payload)
+    sendOffer(userEvent.sourceUser)
+}
+
+function handleUserQuit(userEvent) {
+    if (ROOM_ID != userEvent.roomId || userEvent.sourceUser == USER_ID) {
+        console.log("Got message that not supposed to receive")
+        return;
+    }
+
+    var video = videos[userEvent.sourceUser]
+    video.pause()
+    video.removeAttribute('src')
+    video.load()
 }
 
 function handleUserOffer(userEvent) {
     startVideo()
-        .then(e => sendAnswer(userEvent.source, userEvent.payload))
+        .then(e => sendAnswer(userEvent.sourceUser, userEvent.payload))
 }
 
 function handleUserAnswer(userEvent) {
-    var target = userEvent.source
+    var target = userEvent.sourceUser
     var con = streamingConnections[target]
     if (!con) {
         console.log("TARGET IS NOT FOUND. ABORTING")
@@ -156,7 +178,7 @@ function handleUserAnswer(userEvent) {
 }
 
 function handleSignalingFinished(userEvent) {
-    var target = userEvent.source;
+    var target = userEvent.sourceUser;
     var con = streamingConnections[target]
     if (!con) {
         console.log("TARGET IS NOT FOUND. ABORTING")
@@ -169,7 +191,7 @@ function handleSignalingFinished(userEvent) {
 }
 
 function handleConnectionUpdate(userEvent) {
-    var con = streamingConnections[userEvent.source]
+    var con = streamingConnections[userEvent.sourceUser]
     if (!con) {
         console.log("TARGET IS NOT FOUND. ABORTING")
         return;
@@ -299,6 +321,7 @@ function startVideo() {
             })
             .then(stream => {
                 myVideoStream = stream
+                myVideoStream.getVideoTracks()[0].enabled = false
                 addVideoStream(myVideo, stream)
             })
 }
@@ -336,7 +359,7 @@ function iOS() {
 
 muteButton.onclick = e => {
     //myVideoStream.getAudioTracks()[0].enabled ^= true
-    client.send("/chat/server-events", {}, JSON.stringify({"eventType": "TEST"}))
+    client.send("/chat/server-events", {}, JSON.stringify({"eventType": "TEST", "roomId": ROOM_ID}))
 }
 
 
@@ -345,3 +368,13 @@ stopVideoButton.onclick = e => {
 }
 
 inviteButton.onclick = e => window.alert("JOIN LINK: " + WEB_SERVER + "/?room=" + ROOM_ID)
+
+closeButton.onclick = e => {
+    client.send("/chat/server-events", {}, JSON.stringify(buildQuitEvent()))
+    location.href = "/"
+}
+
+function getCookie(name) {
+    var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    if (match) return match[2];
+  }

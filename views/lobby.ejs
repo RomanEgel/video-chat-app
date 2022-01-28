@@ -7,6 +7,7 @@
 		<script src="https://kit.fontawesome.com/c939d0e917.js"></script>
 		<script>
 			var ROOM_TO_JOIN = '<%= room %>'
+			var SERVER_HTTP_URL = '<%= serverHttpUrl %>'
 		</script>
 	</head>
 	<body>
@@ -19,7 +20,11 @@
 			<div class="main__middle">
 				<form style="padding-right: 10px;">
 					<label for="fname">User name:</label><br>
-					<input type="text" id="fname" name="fname" style="height: 20px;" required><br>
+					<select id="fname" style="height: 25px; width: 150px;">
+						<option>roman</option>
+						<option>roman2</option>
+						<option>roman3</option>
+					</select>
 					<button type="button" id="createButton" onclick="createRoomRedirect()" class="lobby__button" style="width: 150px;">Create a room</button>
 				</form>
 				<form>
@@ -35,12 +40,31 @@
 			froom.value = ROOM_TO_JOIN
 		}
 
+		var tokens = []
+		tokens["roman"] = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjOHRaeWFOaExwd0QxTnl3NkIwT0FUUkx0cmthQ2dNSUJDTzRqVG1OMGtnIn0.eyJleHAiOjE2NDM0NTYzMjYsImlhdCI6MTY0MzM0ODMyNiwianRpIjoiZjNjNzdiNzItMGM2Ny00Zjk3LWJiZWQtOTg3Njg0MGRmNDY0IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgxL2F1dGgvcmVhbG1zL1ZpZGVvQ2hhdFJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjBkZjRmNTZhLWQyMzYtNDQxNC04N2E2LTk4MGVlYTY1OTY0MSIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNoYXQtbG9naW4iLCJzZXNzaW9uX3N0YXRlIjoiNzI0YjBlMjItYTJjYi00NzRlLWI2NmMtMWY1OTZkZjllZjgyIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciIsImRlZmF1bHQtcm9sZXMtdmlkZW9jaGF0cmVhbG0iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJzaWQiOiI3MjRiMGUyMi1hMmNiLTQ3NGUtYjY2Yy0xZjU5NmRmOWVmODIiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJSb21hbiBFZ2VsIiwicHJlZmVycmVkX3VzZXJuYW1lIjoicm9tYW4iLCJnaXZlbl9uYW1lIjoiUm9tYW4iLCJmYW1pbHlfbmFtZSI6IkVnZWwiLCJlbWFpbCI6ImYxeHBAbWFpbC5ydSJ9.CleOc-SfOx2gdoYTtQ5r7YBPMLSO9jnXusdXAw0lSmUbnNIeUuISZIo0X9ljfjXZ3fWUFj4rnsAO3ExLMTNkpknm7XagWzjiqPCPaiGOiUkM7A7__ZlTjiz9ndYNONelfSoy0B4m0zkfZgTILAH-Too8jQKONtIFfa7Fhs8SVM65h8txOxt9cinbFwJ08en4YwpxbymH1kbLMFZJ2qTSOdllH3-R9tn87t89OeLb8U2TC2lgq8sifxDrSGo8Rivehgb1UK91LtdIJfXPRZonJ_DhAGPmqfJXgRw28b-w9AG4COT6_uq24_oQDIf-s-EMkPPvAhRy_onqyV5KB5dG2A'
+		tokens["roman2"] = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjOHRaeWFOaExwd0QxTnl3NkIwT0FUUkx0cmthQ2dNSUJDTzRqVG1OMGtnIn0.eyJleHAiOjE2NDM0NTYzMDIsImlhdCI6MTY0MzM0ODMwMiwianRpIjoiYmY3MTE4NjYtZDIzNi00ODU5LWEzODItNmIxODM5ODM3NmFiIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgxL2F1dGgvcmVhbG1zL1ZpZGVvQ2hhdFJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6Ijk4YmE0NTMzLWJjNzktNGNiYy1hYzNmLTkwMWZlNGUxOWQ4ZCIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNoYXQtbG9naW4iLCJzZXNzaW9uX3N0YXRlIjoiNGRiYzg5ZmMtODYxNC00NTI1LTlkMmYtNDJkYWU0MjVkZWNhIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciIsImRlZmF1bHQtcm9sZXMtdmlkZW9jaGF0cmVhbG0iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJzaWQiOiI0ZGJjODlmYy04NjE0LTQ1MjUtOWQyZi00MmRhZTQyNWRlY2EiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJSb21hbiBFZ2VsIiwicHJlZmVycmVkX3VzZXJuYW1lIjoicm9tYW4yIiwiZ2l2ZW5fbmFtZSI6IlJvbWFuIiwiZmFtaWx5X25hbWUiOiJFZ2VsIn0.jEa5cntOEyg1a0OGtfiSQDqKjkQNN-IpyMniaaF3uRd9fmAXB4F063TLTYUwUY0-MvBiTKjQTX63JeJIAki5LDnC2QhMUVje7CnBqWxvGHbLFYDsHkZ3RScpFxsJHYGcGuTiS-0Bfde4bTVnLd-1SEg7gSy843EFzdSleg-uvgzWWApJDehZySt9Ncs8J3vi3fXpqx-5LiKwkL35Z66y19JgJouLem8IkPrPPXaF3JoC-FOPe8EVpWZ0crplZJgbZ_rgENjSqpPSD5arVD4rbOtyfYebLSbb22DUim4dO0Hha1HXHPlJE0mRu2VaSDCE-s0vW4ua6uqO65muf55sfQ'
+		tokens["roman3"] = 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjOHRaeWFOaExwd0QxTnl3NkIwT0FUUkx0cmthQ2dNSUJDTzRqVG1OMGtnIn0.eyJleHAiOjE2NDM0NjI0NTEsImlhdCI6MTY0MzM1NDQ1MSwianRpIjoiOTFlOWMxMjgtNmE2My00MGRlLTg3ZTItY2RjOTk4ZjdiMDM5IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgxL2F1dGgvcmVhbG1zL1ZpZGVvQ2hhdFJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjI1ZTllNWE4LWUwZWItNDU0ZC05ZDlkLWJiMmY3MjBiMTZkZSIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNoYXQtbG9naW4iLCJzZXNzaW9uX3N0YXRlIjoiNmE4Njk3ODEtYjk2MC00ZTQ2LWEzMGItN2M4MDMwY2YxMDBlIiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciIsImRlZmF1bHQtcm9sZXMtdmlkZW9jaGF0cmVhbG0iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJzaWQiOiI2YTg2OTc4MS1iOTYwLTRlNDYtYTMwYi03YzgwMzBjZjEwMGUiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJSb21hbiBFZ2VsIiwicHJlZmVycmVkX3VzZXJuYW1lIjoicm9tYW4zIiwiZ2l2ZW5fbmFtZSI6IlJvbWFuIiwiZmFtaWx5X25hbWUiOiJFZ2VsIn0.ddpHmI8nZqLbRRmK66AH0K2nxpzRo4B_CVvZ0CJAme3p0v8aLfVxEtHBhecmEGbQ3gKLSWEZ2fgppdGETR1L5Z7Z9-vcB_fbj-GHd1x1jwIXj0utnRVE6nlVsZs6AiAyI1l0Sm7-Q-jUU3Xtukmr0FskYvMBEd3rlfvL19NBqsK66qwM2EccDRb3P9nC4w4dMypmV4TKvTM7QNYh1El75Sc6mVaG0e0Xhj26Cjwz1Nb9mzbBY3VwGoWbpWIQoCXc8U7Cc8kf0q1PcFOFc0gKgJktqpxulXGXXcfYRVu3DEknULb_v3T2cwE4J3n0PcAvJdHe4Te9ZO6b4SohEJXC7g'
+		
 		function createRoomRedirect() {
 			if (!fname.value) {
 				window.alert("Fill username field");
 				return
 			}
-			location.href = "/create-room?name=" + fname.value
+
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", SERVER_HTTP_URL + "/rooms", true);
+			xhr.onreadystatechange = () => {
+				if (xhr.readyState == XMLHttpRequest.DONE) {
+					console.log("Response: " + xhr.response);
+					location.href = "/create-room?userId=" + fname.value + "&roomId=" + JSON.parse(xhr.response).id
+				}
+			}
+			document.cookie='access_token_' + fname.value + '=' + tokens[fname.value]
+			xhr.setRequestHeader('Content-Type', 'application/json');
+			xhr.setRequestHeader('Authorization', 'Bearer ' + tokens[fname.value])
+			xhr.send(JSON.stringify({
+				publicRoom: true
+			}))
 		}
 
 		function joinRoom() {
@@ -49,8 +73,9 @@
 				return
 			}
 
+			document.cookie='access_token_' + fname.value + '=' + tokens[fname.value]
 			// check room exists
-			location.href = "/join-room/" + froom.value + "?name=" + fname.value
+			location.href = "/join-room/" + froom.value + "?userId=" + fname.value
 		}
 	</script>
 </html>

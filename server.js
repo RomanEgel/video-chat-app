@@ -8,19 +8,22 @@ app.use(express.static('public'))
 const session = require('express-session');
 app.use(session({secret: 'mySecret', resave: false, saveUninitialized: false}));
 
+var serverUrl = "https://speakingspace.online"
+
 app.get('/', (req, res) => {
-    res.render('lobby', {room: req.query.room})
+    res.render('lobby', {room: req.query.room, serverHttpUrl: serverUrl})
 })
 app.get('/create-room', (req, res) => {
-    var username = req.query.name
-    req.session.context = {"username": username, "action": "CREATE"};
-    console.log('GOT create request for user ' + username)
-    res.redirect('/rooms/' + uuidv4())
+    var userId = req.query.userId
+    var roomId = req.query.roomId
+    req.session.context = {"userId": userId, "action": "CREATE"};
+    console.log('GOT create request for user ' + userId)
+    res.redirect('/rooms/' + roomId)
 })
 app.get('/join-room/:room', (req, res) => {
-    var username = req.query.name
-    req.session.context = {"username": username, "action": "JOIN"};
-    console.log('GOT join request for user ' + username)
+    var userId = req.query.userId
+    req.session.context = {"userId": userId, "action": "JOIN"};
+    console.log('GOT join request for user ' + userId)
     res.redirect('/rooms/' + req.params.room)
 })
 app.get('/rooms/:room', (req, res) => {
@@ -29,10 +32,10 @@ app.get('/rooms/:room', (req, res) => {
         res.redirect('/')
         return
     }
-    var name = req.session.context.username
+    var userId = req.session.context.userId
     var roomId = req.params.room
-    console.log("Redirecting user " + name + " to room " + roomId)
-    res.render('room', {room: roomId, username: name, action: req.session.context.action})
+    console.log("Redirecting user " + userId + " to room " + roomId)
+    res.render('room', {room: roomId, userId: userId, action: req.session.context.action})
 })
 app.get('/greeting/:name', (req, res) => res.status(200).send("Hello " + req.params.name + "!"))
 
